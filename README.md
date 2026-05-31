@@ -1,6 +1,6 @@
 # Omni DevOps Skill
 
-Version: 1.1.0
+Version: 1.2.0
 
 `omni-devops` is an AI agent skill for initializing or reviewing Cloudflare-first simple website projects with multiple long-lived branches and automatic Cloudflare Workers deployment.
 
@@ -47,5 +47,6 @@ Install this repository as an agent skill by copying or linking `SKILL.md` to th
 
 ## Release
 
+- 1.2.0: Made the skill agent-agnostic rather than Codex-specific, and updated all documentation references to point to the new provider-agnostic global directory `~/.agents/`.
 - 1.1.0: Introduced search indexing (noindex) controls for non-production environments to act as a deployment guardrail.
 - Initial public release: 1.0.0

@@ -2,7 +2,7 @@
 name: omni-devops
 description: Set up or review Cloudflare Workers Static Assets deployments for multiple long-lived branches with explicit Worker targets, Wrangler environments, branch guard scripts, safe deploy commands, non-production noindex controls, dashboard guidance, and DNS/manual Cloudflare checklists. Use when a project needs production/UAT/dev/lab or other branch-to-Worker deployment mapping, when auditing Cloudflare Workers Builds settings, when replacing unsafe generic deploy commands, when preventing non-production releases from search indexing, or when explaining manual Cloudflare setup to a technical service provider.
 metadata:
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Omni DevOps

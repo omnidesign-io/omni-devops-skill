@@ -2,6 +2,15 @@
 
 All notable changes to the `omni-devops` skill will be documented in this file.
 
+## [1.2.0] - 2026-06-01
+
+This release makes the skill provider-agnostic and relocates the master installation path to the global `~/.agents/` folder.
+
+### Changed
+
+- **Provider-Agnostic Skill Location**: Relocated master skill file from `/Users/hanny/.codex/skills/omni-devops/SKILL.md` to `/Users/hanny/.agents/skills/omni-devops/SKILL.md` (`~/.agents/`).
+- **Terminology & Reference Updates**: Cleaned up the workflow and references in `README.md` and `AGENTS.md` to refer to general AI agents rather than Codex specifically.
+
 ## [1.1.0] - 2026-05-31
 
 This release introduces search indexing controls for non-production environments to act as a crucial deployment guardrail.
