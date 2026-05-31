@@ -1,0 +1,7 @@
+interface:
+  display_name: "Omni DevOps"
+  short_description: "Cloudflare-first branch deploy workflow"
+  default_prompt: "Use $omni-devops to set up a Cloudflare-first simple website project with guarded multi-branch deployments."
+
+policy:
+  allow_implicit_invocation: true
