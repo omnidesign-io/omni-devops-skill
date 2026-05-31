@@ -2,7 +2,7 @@
 
 Version: 1.1.0
 
-`omni-devops` is a Codex skill for initializing or reviewing Cloudflare-first simple website projects with multiple long-lived branches and automatic Cloudflare Workers deployment.
+`omni-devops` is an AI agent skill for initializing or reviewing Cloudflare-first simple website projects with multiple long-lived branches and automatic Cloudflare Workers deployment.
 
 The first release packages the workflow currently used by Omni Design: one repository, multiple stable branches, one Cloudflare Worker per environment, guarded deploy scripts, and manual Cloudflare dashboard setup. GitHub Actions is intentionally not part of the design.
 
@@ -22,7 +22,7 @@ Do not use this skill when the goal is to build a GitHub Actions pipeline. The i
 
 ## Intended Project Shape
 
-The skill helps Codex produce or review:
+The skill helps AI agents produce or review:
 
 - `wrangler.jsonc` or `wrangler.toml` with explicit Worker names and environment targets.
 - `scripts/guard-deploy.mjs` to validate branch and deploy target before Wrangler runs.
@@ -43,7 +43,7 @@ Keep the skill itself concise. Put durable procedural knowledge in `SKILL.md`; a
 
 ## Installation
 
-Install this repository as a Codex skill using your normal skill installation workflow, or copy `SKILL.md` into a local `omni-devops` skill directory.
+Install this repository as an agent skill by copying or linking `SKILL.md` to the provider-agnostic global directory `~/.agents/skills/omni-devops/SKILL.md`, or copy `SKILL.md` into a local `omni-devops` skill directory.
 
 ## Release
 
