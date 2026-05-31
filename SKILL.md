@@ -1,8 +1,8 @@
 ---
 name: omni-devops
-description: Set up or review Cloudflare Workers Static Assets deployments for multiple long-lived branches with explicit Worker targets, Wrangler environments, branch guard scripts, safe npm deploy commands, dashboard guidance, and DNS/manual Cloudflare checklists. Use when a project needs production/UAT/dev/lab or other branch-to-Worker deployment mapping, when auditing Cloudflare Workers Builds settings, when replacing unsafe generic deploy commands, or when explaining manual Cloudflare setup to a technical service provider.
+description: Set up or review Cloudflare Workers Static Assets deployments for multiple long-lived branches with explicit Worker targets, Wrangler environments, branch guard scripts, safe deploy commands, non-production noindex controls, dashboard guidance, and DNS/manual Cloudflare checklists. Use when a project needs production/UAT/dev/lab or other branch-to-Worker deployment mapping, when auditing Cloudflare Workers Builds settings, when replacing unsafe generic deploy commands, when preventing non-production releases from search indexing, or when explaining manual Cloudflare setup to a technical service provider.
 metadata:
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # Omni DevOps
@@ -18,6 +18,7 @@ Use Cloudflare Workers Static Assets as the deployment base. Model each long-liv
 - Cloudflare Worker: one stable Worker per long-lived branch.
 - Stable hostname: apex, subdomain, or route per Worker.
 - Deploy command: branch guard first, then Wrangler with the intended environment.
+- Search indexing: production may be indexable; every other deployed environment must emit noindex signals.
 
 Temporary branches such as feature, fix, copy, experiment, and lab branches deploy only if the user explicitly wants a long-lived environment for them. Otherwise, block them from automated deployment.
 
@@ -38,14 +39,17 @@ Temporary branches such as feature, fix, copy, experiment, and lab branches depl
 4. Add a guard script.
    Create `scripts/guard-deploy.mjs`. It should accept a target key, detect branch from CI variables first and local git second, print target/branch/mode, allow only the configured branch for that target, block configured temporary branch patterns, and require a clean working tree for local deploys only.
 
-5. Add safe package scripts.
-   Make generic `deploy` fail with an intentional message. Add local scripts that run guard -> build -> Wrangler, and CI scripts that run guard -> Wrangler because Cloudflare Workers Builds has a separate build command field.
+5. Add noindex controls for every non-production environment.
+   For static sites, set the noindex flag at build time, not only as a Wrangler runtime var. Ensure every non-production page emits robots noindex meta tags and does not advertise a production sitemap.
 
-6. Document manual Cloudflare steps.
+6. Add safe package scripts.
+   Make generic `deploy` fail with an intentional message. Add local scripts that run guard -> the correct build -> Wrangler, and CI scripts that run guard -> Wrangler because Cloudflare Workers Builds has a separate build command field.
+
+7. Document manual Cloudflare steps.
    Create or update deployment docs in the repo. Explain dashboard setup, DNS records, branch controls, deploy commands, and why generic `npx wrangler deploy` is not recommended for multi-Worker repos.
 
-7. Validate without deploying.
-   Run guard tests if present, typecheck, lint where practical, build, formatting checks for touched files, and `git diff --check`. Do not run `wrangler deploy` unless the user explicitly asks.
+8. Validate without deploying.
+   Run guard tests if present, typecheck, lint where practical, production build, every non-production build, noindex output checks, formatting checks for touched files, and `git diff --check`. Do not run `wrangler deploy` unless the user explicitly asks.
 
 ## Wrangler Guidance
 
@@ -84,8 +88,10 @@ Use names that match the user's environments. A common pattern:
 {
   "scripts": {
     "deploy": "node -e \"console.error('Use an explicit deploy target intentionally.'); process.exit(1)\"",
+    "build": "npm run typecheck && astro build",
+    "build:uat": "PUBLIC_NOINDEX=true npm run build",
     "deploy:production": "node scripts/guard-deploy.mjs production && npm run build && wrangler deploy --env=\"\"",
-    "deploy:uat": "node scripts/guard-deploy.mjs uat && npm run build && wrangler deploy --env uat",
+    "deploy:uat": "node scripts/guard-deploy.mjs uat && npm run build:uat && wrangler deploy --env uat",
     "deploy:production:cf": "node scripts/guard-deploy.mjs production && wrangler deploy --env=\"\"",
     "deploy:uat:cf": "node scripts/guard-deploy.mjs uat && wrangler deploy --env uat"
   }
@@ -95,6 +101,27 @@ Use names that match the user's environments. A common pattern:
 Use the package manager already present in the repo: npm, pnpm, yarn, or bun. Adjust commands accordingly.
 
 Explain `:cf` scripts plainly: Cloudflare Workers Builds already runs the separate Build command, so the deploy command should not build again. The `:cf` script still runs the guard and passes the correct Wrangler environment.
+
+## Non-Production Noindex
+
+Treat search indexing as a deployment guardrail. Every deployed environment other than production must be noindex by default, including UAT, staging, preview, demo, QA, and dev branches. Only production should advertise the production sitemap.
+
+For static frameworks such as Astro, Next static export, Vite, or Eleventy, use a build-time public environment variable such as `PUBLIC_NOINDEX=true`. Add page-level meta tags:
+
+```html
+<meta name="robots" content="noindex, nofollow, noarchive" />
+<meta name="googlebot" content="noindex, nofollow, noarchive" />
+```
+
+Also ensure non-production `robots.txt` omits the production sitemap. Prefer allowing crawl in `robots.txt` while using page-level noindex, because a full `Disallow: /` can prevent compliant search engines from seeing the noindex meta tag if a URL is discovered elsewhere.
+
+For static builds, do not rely only on Wrangler `vars` such as `ENVIRONMENT = "uat"` unless the framework actually reads them during build. Cloudflare Workers runtime vars do not change static HTML that has already been generated.
+
+When setting Cloudflare Workers Builds:
+
+- Production Worker build command: normal production build, such as `npm run build`.
+- Non-production Worker build command: noindex build, such as `npm run build:uat`, `npm run build:dev`, or a generic `PUBLIC_NOINDEX=true npm run build`.
+- Non-production deploy command: guarded `:cf` script for that environment.
 
 ## Guard Script Requirements
 
@@ -131,11 +158,17 @@ Give the user simple chat instructions after configuring the repo:
 
 5. Disable builds for non-production branches unless the user explicitly wants preview deployments.
 
-6. Set Build command to the project build command, such as `npm run build`.
+6. Set Build command to the correct environment build:
+   - Production: normal build, such as `npm run build`.
+   - Non-production: noindex build, such as `npm run build:uat` or `PUBLIC_NOINDEX=true npm run build`.
 
 7. Set Deploy command to the guarded Cloudflare script, such as `npm run deploy:uat:cf`.
 
 8. Confirm route/domain after first deploy.
+
+9. Confirm non-production indexing controls after first deploy:
+   - View source on the non-production hostname and find `noindex`.
+   - Visit `/robots.txt` and confirm it has no production sitemap.
 
 Explain why not to use Cloudflare's default `npx wrangler deploy` in multi-Worker repos: it targets the top-level Wrangler config unless `--env <target>` is provided, so it can deploy the wrong Worker. The guarded package script is safer because it checks branch and target before calling Wrangler.
 
@@ -150,6 +183,9 @@ When reviewing an existing project, report:
 - Whether generic deploy is blocked.
 - Whether every deploy command runs a guard first.
 - Whether Cloudflare Build commands should use local deploy scripts or `:cf` scripts.
+- Whether every non-production Worker uses a noindex build command.
+- Whether non-production generated pages include robots noindex meta tags.
+- Whether non-production `robots.txt` omits the production sitemap.
 - Whether dashboard branch controls disable unwanted branch builds.
 - Any mismatch between dashboard Worker names and Wrangler `name` values.
 

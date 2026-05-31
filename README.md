@@ -1,6 +1,6 @@
 # Omni DevOps Skill
 
-Version: 1.0.0
+Version: 1.1.0
 
 `omni-devops` is a Codex skill for initializing or reviewing Cloudflare-first simple website projects with multiple long-lived branches and automatic Cloudflare Workers deployment.
 
@@ -47,4 +47,5 @@ Install this repository as a Codex skill using your normal skill installation wo
 
 ## Release
 
-Initial public release: 1.0.0
+- 1.1.0: Introduced search indexing (noindex) controls for non-production environments to act as a deployment guardrail.
+- Initial public release: 1.0.0
